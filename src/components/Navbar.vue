@@ -24,10 +24,25 @@
           </div>
         </div>
 
+        <div v-if="authStore.isAuthenticated">
+          Xin chào, {{ authStore.currentUser.name }}
+          <button @click="logout">Đăng xuất</button>
+          
+          <router-link 
+            v-if="authStore.isAdmin"
+            to="/admin/dashboard"
+          >
+            Dashboard Admin
+          </router-link>
+        </div>
+        
+        <router-link v-else to="/login">Đăng nhập</router-link>
+
         <button class="cart-btn" @click="toggleCart">
           Giỏ hàng ({{ totalItems }})
         </button>
       </div>
+      
     </div>
   </nav>
 </template>
@@ -36,16 +51,24 @@
 import { categories } from '@/data/books'
 import { mapState } from 'pinia'
 import { useCartStore } from '@/stores/cart'
+import { useAuthStore } from '@/stores/auth'
 
 export default {
   data() {
     return {
       searchQuery: '',
-      categories
+      categories,
+      authStore: useAuthStore()
     }
   },
   computed: {
-    ...mapState(useCartStore, ['totalItems'])
+    ...mapState(useCartStore, ['totalItems']),
+    authStore() {
+      return useAuthStore()
+    },
+    isAdmin() {
+      return this.authStore.currentUser?.role === 'admin'
+    }
   },
   methods: {
     search() {
@@ -53,6 +76,11 @@ export default {
     },
     toggleCart() {
       this.$emit('toggle-cart')
+    },
+    logout() {
+      const authStore = useAuthStore()
+      authStore.logout()
+      window.location = '/login'
     }
   }
 }
