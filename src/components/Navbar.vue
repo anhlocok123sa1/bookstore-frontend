@@ -3,17 +3,17 @@
     <div class="container">
       <router-link to="/" class="logo">BookStore</router-link>
       <div class="search-bar">
-        <input type="text" placeholder="Tìm kiếm sách..." v-model="searchQuery">
+        <input type="text" placeholder="Tìm kiếm sách..." v-model="searchQuery" />
         <button @click="search">Tìm kiếm</button>
       </div>
       <div class="nav-links">
         <router-link to="/">Trang chủ</router-link>
-        
+
         <!-- Danh mục với dropdown -->
         <div class="category-menu">
           <button class="category-trigger">Danh mục</button>
           <div class="category-dropdown">
-            <router-link 
+            <router-link
               v-for="category in categories"
               :key="category.id"
               :to="`/category/${category.id}`"
@@ -27,38 +27,36 @@
         <div v-if="authStore.isAuthenticated">
           Xin chào, {{ authStore.currentUser.name }}
           <button @click="logout">Đăng xuất</button>
-          
-          <router-link 
-            v-if="authStore.isAdmin"
-            to="/admin/dashboard"
-          >
+
+          <router-link v-if="authStore.isAdmin" to="/admin/dashboard">
             Dashboard Admin
           </router-link>
         </div>
-        
+
         <router-link v-else to="/login">Đăng nhập</router-link>
 
-        <button class="cart-btn" @click="toggleCart">
-          Giỏ hàng ({{ totalItems }})
-        </button>
+        <button class="cart-btn" @click="toggleCart">Giỏ hàng ({{ totalItems }})</button>
       </div>
-      
     </div>
   </nav>
 </template>
 
 <script>
-import { categories } from '@/data/books'
 import { mapState } from 'pinia'
 import { useCartStore } from '@/stores/cart'
 import { useAuthStore } from '@/stores/auth'
 
 export default {
+  props: {
+    categories: {
+      type: Array,
+      required: true,
+    },
+  },
   data() {
     return {
       searchQuery: '',
-      categories,
-      authStore: useAuthStore()
+      authStore: useAuthStore(),
     }
   },
   computed: {
@@ -68,7 +66,7 @@ export default {
     },
     isAdmin() {
       return this.authStore.currentUser?.role === 'admin'
-    }
+    },
   },
   methods: {
     search() {
@@ -81,13 +79,12 @@ export default {
       const authStore = useAuthStore()
       authStore.logout()
       window.location = '/login'
-    }
-  }
+    },
+  },
 }
 </script>
 
 <style scoped>
-
 .navbar {
   background-color: #2c3e50;
   color: white;

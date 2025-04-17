@@ -68,20 +68,28 @@ const router = createRouter({
   routes
 })
 
-router.beforeEach((to) => {
+router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
-  authStore.initialize()
+  authStore.initialize() // nếu cần khôi phục từ localStorage
 
-  const isAuthRequired = to.meta.requiresAuth
-  const isAdminRequired = to.meta.requiresAdmin
+  const requiresAuth = to.meta.requiresAuth
+  const requiresAdmin = to.meta.requiresAdmin
 
-  if (isAuthRequired && !authStore.isAuthenticated) {
-    return '/login'
+  // Nếu route cần đăng nhập mà chưa đăng nhập
+  if (requiresAuth && !authStore.currentUser) {
+    return next({ name: 'login' }) // Chuyển hướng tới trang đăng nhập
   }
 
-  if (isAdminRequired && !authStore.isAdmin) {
-    return authStore.isAuthenticated ? '/access-denied' : '/login'
+  // Nếu cần quyền admin nhưng user không phải admin
+  if (requiresAdmin && !authStore.currentUser?.is_admin) {
+    return authStore.currentUser
+      ? next({ name: 'access-denied' }) // Chuyển hướng tới trang access-denied nếu không phải admin
+      : next({ name: 'login' }) // Chuyển hướng tới trang login nếu chưa đăng nhập
   }
+
+  // Cho phép chuyển tiếp bình thường
+  next()
 })
+
 
 export default router

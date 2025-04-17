@@ -1,58 +1,41 @@
 import { defineStore } from 'pinia'
+import axios from 'axios'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    users: [
-      {
-        id: 1,
-        email: 'admin@example.com',
-        password: 'admin123',
-        name: 'Admin',
-        role: 'admin',
-        token: 'fake-admin-token'
-      },
-      {
-        id: 2,
-        email: 'user@example.com',
-        password: 'user123',
-        name: 'Regular User',
-        role: 'user',
-        token: 'fake-user-token'
-      }
-    ],
-    currentUser: null
+    currentUser: null,
+    token: null
   }),
   actions: {
-    login(email, password) {
-      return new Promise((resolve, reject) => {
-        setTimeout(() => {
-          const user = this.users.find(u => 
-            u.email === email && u.password === password
-          )
-          
-          if (user) {
-            this.currentUser = user
-            localStorage.setItem('auth_token', user.token)
-            resolve(user)
-          } else {
-            reject(new Error('Thông tin đăng nhập không chính xác'))
-          }
-        }, 1000) // Giả lập delay API
-      })
+    setUser(user) {
+      this.currentUser = user
+      localStorage.setItem('user', JSON.stringify(user))
+    },
+    setToken(token) {
+      this.token = token
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      localStorage.setItem('token', token)
     },
     logout() {
       this.currentUser = null
-      localStorage.removeItem('auth_token')
+      this.token = null
+      delete axios.defaults.headers.common['Authorization']
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
     },
     initialize() {
-      const token = localStorage.getItem('auth_token')
-      if (token) {
-        this.currentUser = this.users.find(u => u.token === token) || null
+      const token = localStorage.getItem('token')
+      const user = JSON.parse(localStorage.getItem('user'))
+
+      if (token && user) {
+        this.token = token
+        this.currentUser = user
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
       }
     }
   },
   getters: {
-    isAuthenticated: (state) => !!state.currentUser,
-    isAdmin: (state) => state.currentUser?.role === 'admin'
-  }
+    isAuthenticated: (state) => !!state.token,
+    isAdmin: state => state.currentUser?.role === 'admin'
+  },
 })
